@@ -5,7 +5,7 @@ import { prisma } from "../lib/prisma";
 //CREATE WORKFLOW
 export const createWorkflow = async (req: Request, res: Response) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user!.id;
         const { title, nodes, connections } = req.body;
 
         if (!title || !nodes || !connections) {
@@ -36,7 +36,7 @@ export const createWorkflow = async (req: Request, res: Response) => {
 //GET ALL WORKFLOWS (for logged-in user)
 export const getWorkflows = async (req: Request, res: Response) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user!.id;
         const workflows = await prisma.workflow.findMany({
             where: { userId },
             select: {
@@ -55,7 +55,7 @@ export const getWorkflows = async (req: Request, res: Response) => {
 //GET WORKFLOW BY ID
 export const getWorkflowById = async (req: Request, res: Response) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user!.id;
         const workflowId = req.params.id;
         const workflow = await prisma.workflow.findFirst({
             where: {
@@ -75,3 +75,78 @@ export const getWorkflowById = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Internal server error" });
     }
 }
+//UPDATE WORKFLOW
+export const updateWorkflow = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const workflowId = req.params.id;
+    const { title, nodes, connections, enabled } = req.body;
+
+    // check workflow exists & belongs to user
+    const existingWorkflow = await prisma.workflow.findFirst({
+      where: {
+        id: workflowId,
+        userId,
+      },
+    });
+
+    if (!existingWorkflow) {
+      return res.status(404).json({ error: "Workflow not found" });
+    }
+
+    const updatedWorkflow = await prisma.workflow.update({
+      where: { id: workflowId },
+      data: {
+        title,
+        nodes,
+        connections,
+        enabled,
+      },
+    });
+
+    return res.json({
+      message: "Workflow updated successfully",
+      workflow: updatedWorkflow,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+// DELETE WORKFLOW
+export const deleteWorkflow = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const workflowId = req.params.id;
+
+    // check workflow exists & belongs to user
+    const workflow = await prisma.workflow.findFirst({
+      where: {
+        id: workflowId,
+        userId,
+      },
+    });
+
+    if (!workflow) {
+      return res.status(404).json({
+        error: "Workflow not found",
+      });
+    }
+
+    await prisma.workflow.delete({
+      where: {
+        id: workflowId,
+      },
+    });
+
+    return res.json({
+      message: "Workflow deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
