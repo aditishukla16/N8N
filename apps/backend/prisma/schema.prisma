@@ -10,7 +10,9 @@ model Workflow {
   id        String   @id @default(uuid())
   title     String
   userId    String
-
+  nodes     Json
+  connections Json
+  enabled   Boolean   @default(true)
   trigger   Trigger?
   actions   Action[]
   edges     Edge[]
