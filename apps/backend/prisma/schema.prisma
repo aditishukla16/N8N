@@ -22,15 +22,31 @@ model Workflow {
 }
 
 model Trigger {
-  id                  String @id @default(uuid())
-  workflowId          String @unique
-  availableTriggersId String
-  metadata            Json
-  positionX           Int
-  positionY           Int
+  id                 String @id @default(uuid())
+  workflowId         String @unique
+  availableTriggerId String
+  metadata           Json
+  positionX          Int
+  positionY          Int
 
-  workflow Workflow @relation(fields: [workflowId], references: [id])
+  workflow         Workflow         @relation(fields: [workflowId], references: [id])
+  availableTrigger AvailableTrigger @relation(fields: [availableTriggerId], references: [id])
+
+
+
+
 }
+model AvailableTrigger {
+  id        String   @id @default(uuid())
+  type      String   // WEBHOOK, CRON, BINANCE, etc.
+  name      String   // Human readable name
+  icon      String?
+  createdAt DateTime @default(now())
+
+  triggers Trigger[]
+}
+
+
 
 model Action {
   id                String @id @default(uuid())
